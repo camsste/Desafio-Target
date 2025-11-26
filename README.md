@@ -131,5 +131,6 @@ Se quiser, posso adicionar:
 
 ## ✨ Autoria
 
-Desenvolvido com foco em aprendizagem e organização profissional do desafio **DESAFIO TARGET**.
+Desenvolvido com foco em aprendizagem e organização profissional do desafio técnico para a vaga de Desenvolvedor/a de Sistemas Jr.
+
 
