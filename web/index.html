@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>DESAFIO TARGET</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1,h2 {
+      text-align: center;
+      color: #333;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 12px;
+      max-width: 750px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      margin-top: 10px;
+    }
+    input, select {
+      padding: 8px;
+      width: 100%;
+      margin: 5px 0 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    pre {
+      background: #eee;
+      padding: 15px;
+      border-radius: 10px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>DESAFIO TARGET</h1>
+  <h2>Por Camile Stefany</h2>
+
+  <!-- Comissões -->
+  <div class="card">
+    <h2>Calcular Comissões</h2>
+    <p>Carrega o arquivo <b>vendas.json</b> e calcula automaticamente.</p>
+    <input type="file" id="inputVendas" accept="application/json">
+    <button onclick="calcularComissoes()">Calcular</button>
+    <pre id="saidaComissoes"></pre>
+  </div>
+
+  <!-- Estoque -->
+  <div class="card">
+    <h2>Movimentar Estoque</h2>
+    <input type="file" id="inputEstoque" accept="application/json">
+
+    <label>Código do Produto:</label>
+    <input id="codigoProduto" type="number" placeholder="Ex: 101" />
+
+    <label>Quantidade (+ entrada / - saída):</label>
+    <input id="quantidade" type="number" placeholder="Ex: -5" />
+
+    <label>Descrição:</label>
+    <input id="descricaoMov" type="text" placeholder="Ex: Saída por venda" />
+
+    <button onclick="movimentarEstoque()">Executar Movimentação</button>
+    <pre id="saidaEstoque"></pre>
+  </div>
+
+  <!-- Juros -->
+  <div class="card">
+    <h2>Calcular Juros</h2>
+
+    <label>Valor da Dívida (R$):</label>
+    <input id="valorDivida" type="number" step="0.01" />
+
+    <label>Data de Vencimento:</label>
+    <input id="dataVenc" type="date" />
+
+    <button onclick="calcularJuros()">Calcular Juros</button>
+    <pre id="saidaJuros"></pre>
+  </div>
+
+  <script>
+    // ----------- FUNÇÃO COMISSÕES -----------
+    function calcCommission(valor) {
+      if (valor < 100) return 0;
+      if (valor < 500) return valor * 0.01;
+      return valor * 0.05;
+    }
+
+    function calcularComissoes() {
+      const file = document.getElementById("inputVendas").files[0];
+      if (!file) return alert("Selecione o arquivo vendas.json");
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const json = JSON.parse(e.target.result);
+        const totals = {};
+
+        json.vendas.forEach(v => {
+          const vendedor = v.vendedor;
+          const valor = v.valor;
+          const com = calcCommission(valor);
+
+          if (!totals[vendedor]) totals[vendedor] = 0;
+          totals[vendedor] += com;
+        });
+
+        document.getElementById("saidaComissoes").textContent = JSON.stringify(totals, null, 2);
+      };
+      reader.readAsText(file);
+    }
+
+    // ----------- FUNÇÃO ESTOQUE -----------
+    function movimentarEstoque() {
+      const file = document.getElementById("inputEstoque").files[0];
+      if (!file) return alert("Selecione o arquivo estoque.json");
+
+      const codigo = parseInt(document.getElementById("codigoProduto").value);
+      const quantidade = parseInt(document.getElementById("quantidade").value);
+      const descricao = document.getElementById("descricaoMov").value;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const json = JSON.parse(e.target.result);
+
+        const produto = json.estoque.find(p => p.codigoProduto === codigo);
+        if (!produto) return alert("Produto não encontrado!");
+
+        produto.estoque += quantidade;
+
+        const movimentacao = {
+          id: crypto.randomUUID(),
+          codigoProduto: codigo,
+          quantidade,
+          descricao,
+          data: new Date().toISOString()
+        };
+
+        const resultado = {
+          movimentacao,
+          estoqueFinal: produto.estoque
+        };
+
+        document.getElementById("saidaEstoque").textContent = JSON.stringify(resultado, null, 2);
+      };
+      reader.readAsText(file);
+    }
+
+    // ----------- FUNÇÃO JUROS -----------
+    function calcularJuros() {
+      const valor = parseFloat(document.getElementById("valorDivida").value);
+      const venc = document.getElementById("dataVenc").value;
+
+      const hoje = new Date();
+      const dataVenc = new Date(venc);
+
+      const diff = hoje - dataVenc;
+      const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      let juros = 0;
+      if (dias > 0) juros = valor * 0.025 * dias; // 2.5% ao dia
+
+      document.getElementById("saidaJuros").textContent = JSON.stringify({ diasAtraso: dias, juros: juros.toFixed(2) }, null, 2);
+    }
+  </script>
+</body>
+</html>
